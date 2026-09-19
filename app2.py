@@ -41,7 +41,7 @@ tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
         "タブ2: 最終リスト ＆ CSV",
         "タブ3: 領収書PDF",
         "タブ4: スマホQR確認",
-        "タブ5: カスタム表メーカー (PDF&Excel)",
+        "タブ5: カスタム表作成 (PDF&Excel)",
         "タブ6: 宛名ラベル印刷 (12面)",
     ]
 )
@@ -52,7 +52,7 @@ tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
 with tab1:
   header_title = st.text_input(
       "組織名（タイトルとして表示・出力用）",
-      value="第X回 交流会",
+      value="イベント名",
       key="t1_header_title",
   )
   st.header(f"1. 組織ピックアップ ＆ リスト作成：【 {header_title} 】")
@@ -311,10 +311,10 @@ with tab4:
       st.success("CSVを作成しました！")
 
 # ==========================================
-# タブ5: 自由自在カスタム表メーカー（PDF & Excel両対応）
+# タブ5: カスタム表作成（PDF & Excel両対応）
 # ==========================================
 with tab5:
-  st.header("5. 自由自在カスタム表メーカー（PDF ＆ Excel出力）")
+  st.header("5. カスタム表作成（PDF ＆ Excel出力）")
   st.markdown(
       "役員・部会・会員のデータを読み込み、表示する項目、グループ化、並び順を自由にカスタムしてPDFとExcelを出力できます。"
   )
