@@ -32,7 +32,7 @@ st.set_page_config(
 )
 
 st.title("🏛️ 法人会 組織・イベント管理システム")
-st.markdown("ローカルPython / Streamlit UI版（タブ1自由絞り込み対応）")
+st.markdown("ローカルPython / Streamlit UI版（タブ1自由絞り込み・2列×6行ラベル対応）")
 
 # タブの作成
 tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
@@ -42,7 +42,7 @@ tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
         "タブ3: 領収書PDF",
         "タブ4: スマホQR確認",
         "タブ5: カスタム表作成 (PDF&Excel)",
-        "タブ6: 宛名ラベル印刷 (12面)",
+        "タブ6: 宛名ラベル印刷 (2列×6行)",
     ]
 )
 
@@ -94,7 +94,6 @@ with tab1:
 
       df_filtered = df_t1.copy()
       if selected_filter_col != "(絞り込みなし)":
-        # 選択された列のユニークな値（空欄除外）を取得
         unique_vals = [
             str(v)
             for v in df_t1[selected_filter_col].dropna().unique()
@@ -109,8 +108,7 @@ with tab1:
               key="t1_filter_val",
           )
 
-        if selected_filter_val != "((すべて表示))" and selected_filter_val != "(すべて表示)":
-          # 数値型か文字列型かに配慮して一致する行を抽出
+        if selected_filter_val != "(すべて表示)":
           df_filtered = df_filtered[
               df_filtered[selected_filter_col].astype(str)
               == str(selected_filter_val)
@@ -347,10 +345,6 @@ with tab5:
       )
 
       st.subheader("⚙️ 1. 表示項目（フィールド）の選択と並び替え・非表示")
-      st.markdown(
-          "出力したい項目にチェックを入れ、順番を整えてください（不要な項目はチェックを外します）。"
-      )
-
       all_cols = list(df_custom.columns)
 
       col_config_df = pd.DataFrame({
@@ -549,12 +543,12 @@ with tab5:
       st.error(f"ファイル読み込みエラー: {e}")
 
 # ==========================================
-# タブ6: 宛名ラベル印刷（A4・12面付け）
+# タブ6: 宛名ラベル印刷（A4サイズ・12面付け / 2列×6行）
 # ==========================================
 with tab6:
-  st.header("6. 宛名ラベル印刷（A4サイズ・12面付け）")
+  st.header("6. 宛名ラベル印刷（A4サイズ・12面付け / 2列×6行）")
   st.markdown(
-      "会員リストなどのExcelを読み込み、市販の12面タックシール（86×42mm）にぴったりの宛名ラベルPDFを作成します。"
+      "会員リストなどのExcelを読み込み、市販の12面タックシール（2列×6行タイプ）にぴったりの宛名ラベルPDFを作成します。"
   )
 
   uploaded_file_t6 = st.file_uploader(
@@ -593,19 +587,21 @@ with tab6:
 
       st.info(f"印刷対象のラベル数: {len(selected_labels)}件")
 
-      if st.button("🏷️ 12面宛名ラベルPDFを生成する", key="t6_pdf_btn"):
+      if st.button("🏷️ 12面（2列×6行）宛名ラベルPDFを生成する", key="t6_pdf_btn"):
         if len(selected_labels) == 0:
           st.warning("印刷対象が選択されていません。")
         else:
           try:
             pdf_buffer = io.BytesIO()
+            
+            # --- 2列×6行シール専用の正確なマージン設定 ---
             doc = SimpleDocTemplate(
                 pdf_buffer,
                 pagesize=portrait(A4),
-                rightMargin=8 * mm,
-                leftMargin=8 * mm,
-                topMargin=12 * mm,
-                bottomMargin=12 * mm,
+                rightMargin=10 * mm,
+                leftMargin=10 * mm,
+                topMargin=15 * mm,
+                bottomMargin=15 * mm,
             )
 
             story = []
@@ -620,9 +616,10 @@ with tab6:
                 textColor=HexColor('#000000'),
             )
 
-            cell_width = 62 * mm
-            cell_height = 42 * mm
-            col_widths = [cell_width, cell_width, cell_width]
+            # 2列 × 6行のサイズ設定
+            cell_width = 95.0 * mm
+            cell_height = 44.5 * mm  
+            col_widths = [cell_width, cell_width]
 
             current_page_data = []
             row_cells = []
@@ -663,39 +660,40 @@ with tab6:
               p = Paragraph(text_content, label_style)
               row_cells.append(p)
 
-              if len(row_cells) == 3:
+              # 2列たまったら行として追加
+              if len(row_cells) == 2:
                 current_page_data.append(row_cells)
                 row_cells = []
 
-                if len(current_page_data) == 4:
+                # 6行たまったら1ページ分のテーブルを作成
+                if len(current_page_data) == 6:
                   t = Table(
                       current_page_data,
                       colWidths=col_widths,
-                      rowHeights=[cell_height] * 4,
+                      rowHeights=[cell_height] * 6,
                   )
                   t.setStyle(TableStyle([
                       ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                      ('LEFTPADDING', (0, 0), (-1, -1), 4),
-                      ('RIGHTPADDING', (0, 0), (-1, -1), 4),
-                      ('TOPPADDING', (0, 0), (-1, -1), 4),
-                      ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
-                      ('BOX', (0, 0), (-1, -1), 0.2, HexColor('#E5E7E9')),
-                      ('GRID', (0, 0), (-1, -1), 0.2, HexColor('#E5E7E9')),
+                      ('LEFTPADDING', (0, 0), (-1, -1), 6),
+                      ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+                      ('TOPPADDING', (0, 0), (-1, -1), 6),
+                      ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+                      ('BOX', (0, 0), (-1, -1), 0.0, HexColor('#FFFFFF')),
+                      ('GRID', (0, 0), (-1, -1), 0.0, HexColor('#FFFFFF')),
                   ]))
                   story.append(t)
-                  story.append(Spacer(1, 0))
                   current_page_data = []
 
+            # 最後のページの端数パディング処理
             if len(row_cells) > 0:
-              while len(row_cells) < 3:
+              while len(row_cells) < 2:
                 row_cells.append(Paragraph("", label_style))
               current_page_data.append(row_cells)
 
             if len(current_page_data) > 0:
-              while len(current_page_data) < 4:
+              while len(current_page_data) < 6:
                 current_page_data.append(
                     [
-                        Paragraph("", label_style),
                         Paragraph("", label_style),
                         Paragraph("", label_style),
                     ]
@@ -703,16 +701,16 @@ with tab6:
               t = Table(
                   current_page_data,
                   colWidths=col_widths,
-                  rowHeights=[cell_height] * 4,
+                  rowHeights=[cell_height] * 6,
               )
               t.setStyle(TableStyle([
                   ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                  ('LEFTPADDING', (0, 0), (-1, -1), 4),
-                  ('RIGHTPADDING', (0, 0), (-1, -1), 4),
-                  ('TOPPADDING', (0, 0), (-1, -1), 4),
-                  ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
-                  ('BOX', (0, 0), (-1, -1), 0.2, HexColor('#E5E7E9')),
-                  ('GRID', (0, 0), (-1, -1), 0.2, HexColor('#E5E7E9')),
+                  ('LEFTPADDING', (0, 0), (-1, -1), 6),
+                  ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+                  ('TOPPADDING', (0, 0), (-1, -1), 6),
+                  ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+                  ('BOX', (0, 0), (-1, -1), 0.0, HexColor('#FFFFFF')),
+                  ('GRID', (0, 0), (-1, -1), 0.0, HexColor('#FFFFFF')),
               ]))
               story.append(t)
 
@@ -720,9 +718,9 @@ with tab6:
             pdf_buffer.seek(0)
 
             st.download_button(
-                label="📥 12面宛名ラベルPDFをダウンロード",
+                label="📥 12面（2列×6行）宛名ラベルPDFをダウンロード",
                 data=pdf_buffer,
-                file_name="address_labels_12up.pdf",
+                file_name="address_labels_2x6.pdf",
                 mime="application/pdf",
             )
             st.success("12面宛名ラベルのPDF生成が完了しました！")
