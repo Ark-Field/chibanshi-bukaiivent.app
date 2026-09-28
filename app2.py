@@ -31,7 +31,7 @@ st.set_page_config(
     page_title="法人会組織・イベント管理システム", layout="wide"
 )
 
-st.title("🏛️ 法人会 組織・イベント管理システム")
+st.title("🏛️ 法人会 リストアップ/ラベル作成")
 st.markdown("ローカルPython / Streamlit UI版（タブ1自由絞り込み・宛名ラベル右10mm移動版）")
 
 # タブの作成
