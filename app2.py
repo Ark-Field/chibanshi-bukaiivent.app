@@ -32,7 +32,7 @@ st.set_page_config(
 )
 
 st.title("🏛️ 法人会 組織・イベント管理システム")
-st.markdown("ローカルPython / Streamlit UI版（タブ1自由絞り込み・宛名ラベル完全対応）")
+st.markdown("ローカルPython / Streamlit UI版（タブ1自由絞り込み・宛名ラベル右10mm移動版）")
 
 # タブの作成
 tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
@@ -543,12 +543,12 @@ with tab5:
       st.error(f"ファイル読み込みエラー: {e}")
 
 # ==========================================
-# タブ6: 宛名ラベル印刷（2列×6行・完全指定寸法版）
+# タブ6: 宛名ラベル印刷（2列×6行・右へ10mm移動版）
 # ==========================================
 with tab6:
-  st.header("6. 宛名ラベル印刷（A4・2列×6行 指定寸法版）")
+  st.header("6. 宛名ラベル印刷（A4・2列×6行 / 右へ10mm調整版）")
   st.markdown(
-      "ご指定の寸法（上余白21.2mm, 左右余白18.6mm, 下余白22.0mm, 一面86.4×42.3mm）に完全準拠した宛名ラベルPDFを作成します。"
+      "ご指定の寸法をベースに、全体を右へ10mmオフセットして印字位置を調整した宛名ラベルPDFを作成します。"
   )
 
   uploaded_file_t6 = st.file_uploader(
@@ -587,19 +587,20 @@ with tab6:
 
       st.info(f"印刷対象のラベル数: {len(selected_labels)}件")
 
-      if st.button("🏷️ 指定寸法ラベルPDFを生成する", key="t6_pdf_btn"):
+      if st.button("🏷️ 右へ10mm移動したラベルPDFを生成する", key="t6_pdf_btn"):
         if len(selected_labels) == 0:
           st.warning("印刷対象が選択されていません。")
         else:
           try:
             pdf_buffer = io.BytesIO()
             
-            # --- ご指定の余白を完全反映 ---
+            # --- 【右へ10mm移動の調整】 ---
+            # 左マージンを 18.6mm + 10mm = 28.6mm に広げ、右マージンを 18.6mm - 10mm = 8.6mm に縮める
             doc = SimpleDocTemplate(
                 pdf_buffer,
                 pagesize=portrait(A4),
-                leftMargin=18.6 * mm,
-                rightMargin=18.6 * mm,
+                leftMargin=28.6 * mm,
+                rightMargin=8.6 * mm,
                 topMargin=21.2 * mm,
                 bottomMargin=22.0 * mm,
             )
@@ -616,7 +617,7 @@ with tab6:
                 textColor=HexColor('#000000'),
             )
 
-            # --- ご指定の一面サイズ（2列 × 6行） ---
+            # 一面サイズ（2列 × 6行）
             cell_width = 86.4 * mm
             cell_height = 42.3 * mm  
             col_widths = [cell_width, cell_width]
@@ -720,10 +721,10 @@ with tab6:
             st.download_button(
                 label="📥 宛名ラベルPDFをダウンロード",
                 data=pdf_buffer,
-                file_name="address_labels_custom.pdf",
+                file_name="address_labels_shifted.pdf",
                 mime="application/pdf",
             )
-            st.success("宛名ラベルのPDF生成が完了しました！プリンターの「実際のサイズ（拡大縮小なし）」で印刷してください。")
+            st.success("宛名ラベルのPDF生成が完了しました！")
           except Exception as label_ex:
             st.error(f"ラベルPDF生成中にエラーが発生しました: {label_ex}")
 
