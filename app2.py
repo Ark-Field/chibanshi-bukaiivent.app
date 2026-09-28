@@ -32,7 +32,7 @@ st.set_page_config(
 )
 
 st.title("🏛️ 法人会 組織・イベント管理システム")
-st.markdown("ローカルPython / Streamlit UI版（タブ1自由絞り込み・2列×6行ラベル対応）")
+st.markdown("ローカルPython / Streamlit UI版（タブ1自由絞り込み・宛名ラベル完全対応）")
 
 # タブの作成
 tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
@@ -543,12 +543,12 @@ with tab5:
       st.error(f"ファイル読み込みエラー: {e}")
 
 # ==========================================
-# タブ6: 宛名ラベル印刷（A4サイズ・12面付け / 2列×6行）
+# タブ6: 宛名ラベル印刷（2列×6行・完全指定寸法版）
 # ==========================================
 with tab6:
-  st.header("6. 宛名ラベル印刷（A4サイズ・12面付け / 2列×6行）")
+  st.header("6. 宛名ラベル印刷（A4・2列×6行 指定寸法版）")
   st.markdown(
-      "会員リストなどのExcelを読み込み、市販の12面タックシール（2列×6行タイプ）にぴったりの宛名ラベルPDFを作成します。"
+      "ご指定の寸法（上余白21.2mm, 左右余白18.6mm, 下余白22.0mm, 一面86.4×42.3mm）に完全準拠した宛名ラベルPDFを作成します。"
   )
 
   uploaded_file_t6 = st.file_uploader(
@@ -587,21 +587,21 @@ with tab6:
 
       st.info(f"印刷対象のラベル数: {len(selected_labels)}件")
 
-      if st.button("🏷️ 12面（2列×6行）宛名ラベルPDFを生成する", key="t6_pdf_btn"):
+      if st.button("🏷️ 指定寸法ラベルPDFを生成する", key="t6_pdf_btn"):
         if len(selected_labels) == 0:
           st.warning("印刷対象が選択されていません。")
         else:
           try:
             pdf_buffer = io.BytesIO()
             
-            # --- 2列×6行シール専用の正確なマージン設定 ---
+            # --- ご指定の余白を完全反映 ---
             doc = SimpleDocTemplate(
                 pdf_buffer,
                 pagesize=portrait(A4),
-                rightMargin=10 * mm,
-                leftMargin=10 * mm,
-                topMargin=15 * mm,
-                bottomMargin=15 * mm,
+                leftMargin=18.6 * mm,
+                rightMargin=18.6 * mm,
+                topMargin=21.2 * mm,
+                bottomMargin=22.0 * mm,
             )
 
             story = []
@@ -616,9 +616,9 @@ with tab6:
                 textColor=HexColor('#000000'),
             )
 
-            # 2列 × 6行のサイズ設定
-            cell_width = 95.0 * mm
-            cell_height = 44.5 * mm  
+            # --- ご指定の一面サイズ（2列 × 6行） ---
+            cell_width = 86.4 * mm
+            cell_height = 42.3 * mm  
             col_widths = [cell_width, cell_width]
 
             current_page_data = []
@@ -674,10 +674,10 @@ with tab6:
                   )
                   t.setStyle(TableStyle([
                       ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                      ('LEFTPADDING', (0, 0), (-1, -1), 6),
-                      ('RIGHTPADDING', (0, 0), (-1, -1), 6),
-                      ('TOPPADDING', (0, 0), (-1, -1), 6),
-                      ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+                      ('LEFTPADDING', (0, 0), (-1, -1), 4),
+                      ('RIGHTPADDING', (0, 0), (-1, -1), 4),
+                      ('TOPPADDING', (0, 0), (-1, -1), 4),
+                      ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
                       ('BOX', (0, 0), (-1, -1), 0.0, HexColor('#FFFFFF')),
                       ('GRID', (0, 0), (-1, -1), 0.0, HexColor('#FFFFFF')),
                   ]))
@@ -705,10 +705,10 @@ with tab6:
               )
               t.setStyle(TableStyle([
                   ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                  ('LEFTPADDING', (0, 0), (-1, -1), 6),
-                  ('RIGHTPADDING', (0, 0), (-1, -1), 6),
-                  ('TOPPADDING', (0, 0), (-1, -1), 6),
-                  ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+                  ('LEFTPADDING', (0, 0), (-1, -1), 4),
+                  ('RIGHTPADDING', (0, 0), (-1, -1), 4),
+                  ('TOPPADDING', (0, 0), (-1, -1), 4),
+                  ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
                   ('BOX', (0, 0), (-1, -1), 0.0, HexColor('#FFFFFF')),
                   ('GRID', (0, 0), (-1, -1), 0.0, HexColor('#FFFFFF')),
               ]))
@@ -718,12 +718,12 @@ with tab6:
             pdf_buffer.seek(0)
 
             st.download_button(
-                label="📥 12面（2列×6行）宛名ラベルPDFをダウンロード",
+                label="📥 宛名ラベルPDFをダウンロード",
                 data=pdf_buffer,
-                file_name="address_labels_2x6.pdf",
+                file_name="address_labels_custom.pdf",
                 mime="application/pdf",
             )
-            st.success("12面宛名ラベルのPDF生成が完了しました！")
+            st.success("宛名ラベルのPDF生成が完了しました！プリンターの「実際のサイズ（拡大縮小なし）」で印刷してください。")
           except Exception as label_ex:
             st.error(f"ラベルPDF生成中にエラーが発生しました: {label_ex}")
 
